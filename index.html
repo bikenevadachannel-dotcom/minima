@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smart Campus Shuttle - App Prototype</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body { font-family: 'Prompt', system-ui, sans-serif; background: #f1f5f9; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col items-center p-4">
+
+<header class="max-w-4xl w-full text-center my-4">
+  <h1 class="text-2xl font-bold">Smart Campus Shuttle Prototype</h1>
+  <p class="text-sm text-slate-500">ต้นแบบแอปพลิเคชันเรียกรถรับส่งภายในมหาวิทยาลัย</p>
+</header>
+
+<div class="max-w-full overflow-x-auto pb-4">
+<div class="relative w-[375px] h-[780px] bg-black rounded-[45px] p-3 shadow-2xl border-4 border-slate-300 mx-auto">
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-2xl z-50 flex justify-center items-center">
+    <div class="w-3 h-3 bg-slate-900 rounded-full mr-2"></div>
+    <div class="w-2 h-2 bg-blue-900 rounded-full"></div>
+  </div>
+
+  <div class="w-full h-full bg-slate-50 rounded-[35px] overflow-hidden flex flex-col relative pt-6">
+    <div class="px-6 py-1 flex justify-between items-center text-xs text-slate-600 z-40 bg-white/80">
+      <span class="font-semibold">09:41</span>
+      <div class="flex gap-1.5 items-center"><i class="fa-solid fa-signal"></i><i class="fa-solid fa-wifi"></i><i class="fa-solid fa-battery-full"></i></div>
+    </div>
+
+    <div id="screen-container" class="flex-1 overflow-y-auto no-scrollbar relative">
+
+      <!-- Screen 1 -->
+      <div id="screen-1" class="app-screen p-4 flex flex-col gap-4">
+        <div class="bg-gradient-to-r from-blue-900 to-indigo-800 text-white rounded-2xl p-4 shadow-lg">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs bg-white/20 px-2.5 py-1 rounded-full">สวัสดีตอนเช้า 👋</span>
+            <i class="fa-solid fa-bell text-sm"></i>
+          </div>
+          <div class="flex items-center gap-2">
+            <h2 id="user-name" class="text-xl font-bold">น้องมาร์ค</h2>
+            <input id="user-name-input" maxlength="30" class="hidden bg-white/20 text-white text-xl font-bold rounded-lg px-2 py-0.5 w-44 outline-none placeholder-white/50" placeholder="ใส่ชื่อของคุณ">
+            <button id="edit-name-btn" onclick="editName()" title="แก้ไขชื่อ" class="text-xs bg-white/20 w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/30">✏️</button>
+          </div>
+          <p class="text-xs text-blue-100 mt-1">เดินทางสะดวก ปลอดภัย รวดเร็ว</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <button onclick="togglePicker()" class="w-full p-4 text-left">
+            <div class="text-xs text-slate-400 mb-1">จุดรับปัจจุบัน (แตะเพื่อเปลี่ยน)</div>
+            <div class="flex items-center gap-2 font-semibold text-slate-700">
+              <i class="fa-solid fa-location-dot text-red-500"></i>
+              <span id="current-station-name" class="flex-1">หน้าอาคารเรียน 1 (จุดบริการ 01)</span>
+              <i id="picker-arrow" class="fa-solid fa-chevron-down text-slate-400 text-xs"></i>
+            </div>
+          </button>
+          <div id="station-picker" class="hidden border-t border-slate-100"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="goToScreen(2)" class="bg-blue-900 text-white p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-blue-800 transition shadow">
+            <i class="fa-solid fa-qrcode text-2xl"></i><span class="text-sm font-medium">สแกน QR Code</span>
+          </button>
+          <button onclick="goToScreen(3)" class="bg-emerald-600 text-white p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-emerald-500 transition shadow">
+            <span class="text-2xl">🚗</span><span class="text-sm font-medium">เรียกรถ</span>
+          </button>
+        </div>
+        <div class="bg-slate-100 p-4 rounded-2xl border border-slate-200 flex items-center justify-between">
+          <div>
+            <div class="text-xs text-slate-500">รถคันต่อไปจะมาถึงใน</div>
+            <div class="text-2xl font-bold text-emerald-600">3 นาที</div>
+            <div class="text-[10px] text-slate-400">หลังสแกนจุดบริการ</div>
+          </div>
+          <span class="text-3xl">🚗🏍️🚐</span>
+        </div>
+      </div>
+
+      <!-- Screen 2 -->
+      <div id="screen-2" class="app-screen hidden p-4 flex flex-col items-center justify-center h-full bg-slate-900 text-white relative">
+        <p class="text-sm font-medium mb-4">สแกน QR Code ที่จุดบริการ</p>
+        <div class="relative w-56 h-56 border-2 border-emerald-400 rounded-2xl overflow-hidden bg-slate-800">
+          <video id="scan-video" class="absolute inset-0 w-full h-full object-cover" playsinline muted></video>
+          <div class="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-emerald-500"></div>
+          <div class="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-emerald-500"></div>
+          <div class="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-emerald-500"></div>
+          <div class="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-emerald-500"></div>
+        </div>
+        <canvas id="scan-canvas" class="hidden"></canvas>
+        <p id="scan-status" class="text-xs text-slate-300 mt-4 text-center min-h-[2.5rem] px-2">กำลังเปิดกล้อง...</p>
+        <label class="mt-2 bg-emerald-500 text-white px-5 py-2 rounded-full text-sm font-medium shadow-lg hover:bg-emerald-400 cursor-pointer">
+          เลือกรูป QR จากเครื่อง
+          <input id="scan-file" type="file" accept="image/*" class="hidden">
+        </label>
+        <button onclick="demoScan()" class="mt-3 text-xs text-slate-400 underline">จำลองสแกนสำเร็จ (ไม่ใช้กล้อง)</button>
+        <button onclick="goToScreen(1)" class="mt-2 text-xs text-slate-400">ยกเลิก</button>
+      </div>
+
+      <!-- Screen 3 -->
+      <div id="screen-3" class="app-screen hidden p-4 flex flex-col gap-3">
+        <div class="flex items-center gap-2 mb-2">
+          <button onclick="goToScreen(1)" class="p-2 text-slate-600"><i class="fa-solid fa-arrow-left"></i></button>
+          <h3 class="font-bold text-lg">เลือกจุดหมายปลายทาง</h3>
+        </div>
+        <div class="flex flex-col gap-2">
+          <button onclick="selectDestination('อาคารเรียน 1')" class="p-3 bg-white border border-slate-200 rounded-xl text-left hover:border-emerald-500 flex justify-between items-center">
+            <span class="text-sm font-medium"><i class="fa-solid fa-graduation-cap mr-2"></i>อาคารเรียน 1</span><i class="fa-solid fa-chevron-right text-slate-400"></i></button>
+          <button onclick="selectDestination('ห้องสมุดกลาง')" class="p-3 bg-white border border-slate-200 rounded-xl text-left hover:border-emerald-500 flex justify-between items-center">
+            <span class="text-sm font-medium"><i class="fa-solid fa-book mr-2"></i>ห้องสมุดกลาง</span><i class="fa-solid fa-chevron-right text-slate-400"></i></button>
+          <button onclick="selectDestination('โรงอาหารกลาง')" class="p-3 bg-white border border-slate-200 rounded-xl text-left hover:border-emerald-500 flex justify-between items-center">
+            <span class="text-sm font-medium"><i class="fa-solid fa-utensils mr-2"></i>โรงอาหารกลาง</span><i class="fa-solid fa-chevron-right text-slate-400"></i></button>
+          <button onclick="selectDestination('หอพักนักศึกษา')" class="p-3 bg-white border border-slate-200 rounded-xl text-left hover:border-emerald-500 flex justify-between items-center">
+            <span class="text-sm font-medium"><i class="fa-solid fa-bed mr-2"></i>หอพักนักศึกษา</span><i class="fa-solid fa-chevron-right text-slate-400"></i></button>
+        </div>
+      </div>
+
+      <!-- Screen 4 -->
+      <div id="screen-4" class="app-screen hidden p-4 flex flex-col gap-4">
+        <div class="flex items-center gap-2">
+          <button onclick="goToScreen(3)" class="p-2 text-slate-600"><i class="fa-solid fa-arrow-left"></i></button>
+          <h3 class="font-bold text-lg">ยืนยันการเรียกรถ</h3>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 space-y-3">
+          <div><div class="text-xs text-slate-400">จุดรับ</div><div class="font-medium text-slate-700" id="pickup-text">หน้าอาคารเรียน 1</div></div>
+          <hr>
+          <div><div class="text-xs text-slate-400">จุดหมายปลายทาง</div><div class="font-medium text-emerald-600" id="selected-dest-text">ห้องสมุดกลาง</div></div>
+        </div>
+        <div>
+          <div class="text-sm font-semibold mb-2">เลือกประเภทรถ</div>
+          <div id="vehicle-list" class="flex flex-col gap-2"></div>
+        </div>
+        <button onclick="goToScreen(5)" class="w-full py-3 bg-emerald-600 text-white font-semibold rounded-2xl shadow hover:bg-emerald-500"><span id="confirm-btn-text">ยืนยันเรียกรถ</span></button>
+      </div>
+
+      <!-- Screen 5 -->
+      <div id="screen-5" class="app-screen hidden p-4 flex flex-col gap-3 h-full">
+        <h3 class="font-bold text-lg text-center">รถกำลังเดินทางมา...</h3>
+        <div id="track-vehicle" class="text-center text-sm text-slate-600"></div>
+        <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 text-center">
+          <div class="text-xs text-emerald-700">รถจะมาถึงใน</div>
+          <div class="text-3xl font-bold text-emerald-600">3 นาที</div>
+          <div class="text-xs text-slate-500 mt-1">ระยะทางประมาณ 450 เมตร</div>
+        </div>
+        <div class="flex-1 bg-slate-200 rounded-2xl flex items-center justify-center">
+          <div class="text-slate-400 text-center"><i class="fa-solid fa-map-location-dot text-4xl mb-2"></i><p class="text-xs">จำลองแสดงแผนที่ GPS Real-time</p></div>
+        </div>
+        <button onclick="goToScreen(6)" class="w-full py-2.5 bg-slate-800 text-white text-sm rounded-xl">จำลองรถมาถึงแล้ว</button>
+      </div>
+
+      <!-- Screen 6 -->
+      <div id="screen-6" class="app-screen hidden p-4 flex flex-col items-center justify-center min-h-full text-center gap-3">
+        <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-3xl text-emerald-600"><i class="fa-solid fa-check"></i></div>
+        <h3 class="font-bold text-xl">รถมาถึงแล้ว!</h3>
+        <p class="text-sm text-slate-500">กรุณาขึ้นรถที่ <span id="arrived-station">จุดบริการ 01</span><br>ปลายทาง: <span id="arrived-dest" class="text-emerald-600 font-medium">ห้องสมุดกลาง</span></p>
+        <div id="arrived-vehicle" class="bg-white border border-slate-200 rounded-2xl px-6 py-3 text-sm leading-relaxed"></div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-3 w-full">
+          <div class="text-xs text-slate-500 mb-2">สแกน QR เพื่อชำระค่าโดยสาร</div>
+          <div id="pay-qr" class="flex justify-center"></div>
+          <div class="text-lg font-bold text-emerald-600 mt-2" id="pay-amount"></div>
+          <div class="text-[10px] text-slate-400" id="pay-ref"></div>
+        </div>
+        <button onclick="goToScreen(7)" class="w-full py-3 bg-blue-900 text-white font-semibold rounded-2xl shadow hover:bg-blue-800">กลับหน้าแรก</button>
+      </div>
+
+      <!-- Screen 7: ขอบคุณ -->
+      <div id="screen-7" class="app-screen hidden p-4 flex flex-col items-center justify-center min-h-full text-center gap-3">
+        <div class="text-6xl">🙏</div>
+        <h3 class="font-bold text-2xl text-emerald-600">ขอบคุณที่ใช้บริการ</h3>
+        <p class="text-sm text-slate-500">Smart Campus Shuttle<br>ขอให้เดินทางปลอดภัย แล้วพบกันใหม่ครั้งหน้า</p>
+        <p class="text-[11px] text-slate-400">กำลังกลับสู่หน้าแรก...</p>
+        <button onclick="goToScreen(1)" class="mt-2 w-full py-3 bg-blue-900 text-white font-semibold rounded-2xl shadow hover:bg-blue-800">กลับหน้าแรก</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<section class="max-w-md w-full text-center mt-2 mb-6">
+  <h2 class="font-semibold mb-1">ตั้งค่าบัญชีรับเงิน (พร้อมเพย์)</h2>
+  <p class="text-xs text-slate-500 mb-3">ใส่เบอร์พร้อมเพย์ของผู้รับเงิน เพื่อให้ QR ที่หน้า "รถมาถึงแล้ว" สแกนจ่ายด้วยแอปธนาคารได้จริง (ใช้ทดสอบกับเบอร์ตัวเองก่อน)</p>
+  <div class="flex gap-2 justify-center">
+    <input id="pp-input" inputmode="numeric" maxlength="15" placeholder="เช่น 08xxxxxxxx" class="border border-slate-300 rounded-lg px-3 py-2 text-sm w-48 bg-white">
+    <button onclick="savePromptPay()" class="bg-blue-900 text-white text-sm px-4 py-2 rounded-lg">บันทึก</button>
+  </div>
+  <p id="pp-msg" class="text-xs text-slate-500 mt-2 min-h-[1rem]"></p>
+</section>
+
+<section class="max-w-2xl w-full text-center mt-2 mb-8">
+  <h2 class="font-semibold mb-1">QR ตัวอย่างสำหรับทดสอบ</h2>
+  <p class="text-xs text-slate-500 mb-3">เปิดหน้านี้บนมือถือแล้วสแกน QR ที่แสดงบนจอคอม หรือคลิกขวาบันทึกรูป QR แล้วใช้ปุ่ม "เลือกรูป QR จากเครื่อง"</p>
+  <div id="sample-qrs" class="flex flex-wrap justify-center gap-4"></div>
+</section>
+
+<script>
+  const STATIONS = {
+    '01': 'หน้าอาคารเรียน 1',
+    '02': 'ห้องสมุดกลาง',
+    '03': 'โรงอาหารกลาง',
+    '04': 'หอพักนักศึกษา'
+  };
+  let stream = null, scanning = false, currentCode = '01', thanksTimer = null;
+  const $ = id => document.getElementById(id);
+  const setStatus = t => { $('scan-status').textContent = t; };
+
+  function goToScreen(n) {
+    stopScan();
+    document.querySelectorAll('.app-screen').forEach(s => s.classList.add('hidden'));
+    $('screen-' + n).classList.remove('hidden');
+    $('screen-container').scrollTop = 0;
+    if (n === 2) startScan();
+    updateTripInfo();
+    if (n === 5) bookingRef = newRef();
+    if (n === 6) renderPayQR();
+    clearTimeout(thanksTimer);
+    if (n === 7) thanksTimer = setTimeout(() => { if (!$('screen-7').classList.contains('hidden')) goToScreen(1); }, 4000);
+  }
+  function selectDestination(name) {
+    $('selected-dest-text').textContent = name;
+    $('arrived-dest').textContent = name;
+    goToScreen(4);
+  }
+  function renderPicker() {
+    $('station-picker').innerHTML = Object.entries(STATIONS).map(([code, name]) => `
+      <button onclick="setStation('${code}')" class="w-full px-4 py-3 flex items-center justify-between text-left text-sm border-b border-slate-50 last:border-0 ${code === currentCode ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-slate-700 hover:bg-slate-50'}">
+        <span>${name} <span class="text-xs text-slate-400">(จุดบริการ ${code})</span></span>
+        ${code === currentCode ? '<span>✔</span>' : ''}
+      </button>`).join('');
+  }
+  function togglePicker(forceClose) {
+    const el = $('station-picker');
+    const open = forceClose ? false : el.classList.contains('hidden');
+    el.classList.toggle('hidden', !open);
+    $('picker-arrow').className = 'fa-solid text-slate-400 text-xs ' + (open ? 'fa-chevron-up' : 'fa-chevron-down');
+  }
+  function setStation(code) {
+    currentCode = code;
+    renderPicker();
+    togglePicker(true);
+    const name = STATIONS[code];
+    $('current-station-name').textContent = name + ' (จุดบริการ ' + code + ')';
+    $('pickup-text').textContent = name;
+    $('arrived-station').textContent = 'จุดบริการ ' + code;
+  }
+
+  // รูปแบบ QR ที่ระบบรับ: SHUTTLE:01 ถึง SHUTTLE:04
+  function handleQR(text) {
+    const m = /^SHUTTLE:(\d{2})$/.exec((text || '').trim());
+    if (!m || !STATIONS[m[1]]) {
+      setStatus('QR นี้ไม่ใช่จุดบริการของระบบ: ' + (text || '').slice(0, 40));
+      return false;
+    }
+    setStation(m[1]);
+    goToScreen(3);
+    return true;
+  }
+
+  async function startScan() {
+    const video = $('scan-video');
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setStatus('เบราว์เซอร์นี้ไม่รองรับกล้อง (ต้องเปิดผ่าน https หรือ localhost) ใช้ปุ่มเลือกรูปแทนได้');
+      return;
+    }
+    setStatus('กำลังเปิดกล้อง...');
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+      video.srcObject = stream;
+      await video.play();
+      scanning = true;
+      setStatus('หันกล้องไปที่ QR Code ของจุดบริการ');
+      requestAnimationFrame(tick);
+    } catch (e) {
+      setStatus('เปิดกล้องไม่ได้ (' + e.name + ') ใช้ปุ่มเลือกรูป QR แทนได้');
+    }
+  }
+  function tick() {
+    if (!scanning) return;
+    const video = $('scan-video'), canvas = $('scan-canvas');
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+      if (code && handleQR(code.data)) return;
+    }
+    requestAnimationFrame(tick);
+  }
+  function stopScan() {
+    scanning = false;
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  }
+
+  // สแกนจากไฟล์รูป
+  $('scan-file').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, 1000 / Math.max(img.width, img.height));
+      const c = $('scan-canvas');
+      c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      const d = ctx.getImageData(0, 0, c.width, c.height);
+      const code = jsQR(d.data, d.width, d.height);
+      if (!code) setStatus('ไม่พบ QR Code ในรูปนี้ ลองรูปที่ชัดขึ้น');
+      else handleQR(code.data);
+      URL.revokeObjectURL(img.src);
+    };
+    img.src = URL.createObjectURL(f);
+    e.target.value = '';
+  });
+
+  function demoScan() { handleQR('SHUTTLE:01'); }
+
+  // แก้ไขชื่อผู้ใช้
+  function applyName(n) { $('user-name').textContent = n; }
+  function editName() {
+    const input = $('user-name-input');
+    input.value = $('user-name').textContent;
+    $('user-name').classList.add('hidden');
+    $('edit-name-btn').classList.add('hidden');
+    input.classList.remove('hidden');
+    input.focus(); input.select();
+  }
+  function finishEdit(save) {
+    const input = $('user-name-input');
+    if (input.classList.contains('hidden')) return;
+    const v = input.value.trim();
+    if (save && v) {
+      applyName(v);
+      try { localStorage.setItem('shuttle-user-name', v); } catch (e) {}
+    }
+    input.classList.add('hidden');
+    $('user-name').classList.remove('hidden');
+    $('edit-name-btn').classList.remove('hidden');
+  }
+  $('user-name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') finishEdit(true);
+    if (e.key === 'Escape') finishEdit(false);
+  });
+  $('user-name-input').addEventListener('blur', () => finishEdit(true));
+  try { const saved = localStorage.getItem('shuttle-user-name'); if (saved) applyName(saved); } catch (e) {}
+
+  // เลือกประเภทรถและราคา
+  const VEHICLES = {
+    car:  { icon: '🚗',  name: 'รถยนต์',        price: 55,  plate: 'กท 1234' },
+    moto: { icon: '🏍️', name: 'รถมอเตอร์ไซค์', price: 35,  plate: '1กก 567' },
+    van:  { icon: '🚐',  name: 'รถตู้',          price: 80, plate: 'นข 8899' }
+  };
+  let selectedVehicle = 'car';
+  function renderVehicles() {
+    $('vehicle-list').innerHTML = Object.entries(VEHICLES).map(([key, v]) => `
+      <button onclick="selectVehicle('${key}')" class="p-3 rounded-xl border flex items-center justify-between text-left ${key === selectedVehicle ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white hover:border-emerald-300'}">
+        <span class="flex items-center gap-3"><span class="text-2xl">${v.icon}</span><span class="text-sm font-medium">${v.name}</span></span>
+        <span class="text-sm font-semibold ${key === selectedVehicle ? 'text-emerald-600' : 'text-slate-600'}">${v.price} บาท</span>
+      </button>`).join('');
+  }
+  function selectVehicle(key) {
+    selectedVehicle = key;
+    renderVehicles();
+    updateTripInfo();
+  }
+  function updateTripInfo() {
+    const v = VEHICLES[selectedVehicle];
+    $('confirm-btn-text').textContent = 'ยืนยันเรียกรถ · ' + v.price + ' บาท';
+    $('track-vehicle').textContent = v.icon + ' ' + v.name + ' · ' + v.price + ' บาท';
+    $('arrived-vehicle').innerHTML = v.icon + ' <b>' + v.name + '</b><br>ทะเบียน <b>' + v.plate + '</b><br>ค่าโดยสาร <b class="text-emerald-600">' + v.price + ' บาท</b>';
+  }
+  renderVehicles();
+  updateTripInfo();
+
+  // QR พร้อมเพย์ (PromptPay) จริง สแกนจ่ายด้วยแอปธนาคารได้
+  let bookingRef = newRef();
+  let ppId = '';
+  try { ppId = localStorage.getItem('shuttle-promptpay') || ''; } catch (e) {}
+  function newRef() { return 'SH' + Math.floor(100000 + Math.random() * 900000); }
+  function tlv(id, val) { return id + String(val.length).padStart(2, '0') + val; }
+  function crc16(str) {
+    let crc = 0xFFFF;
+    for (let i = 0; i < str.length; i++) {
+      crc ^= str.charCodeAt(i) << 8;
+      for (let j = 0; j < 8; j++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
+    }
+    return crc.toString(16).toUpperCase().padStart(4, '0');
+  }
+  // id = เบอร์มือถือ 10 หลัก, เลขบัตรประชาชน/ภาษี 13 หลัก หรือ e-Wallet 15 หลัก
+  function promptPayPayload(id, amount) {
+    id = String(id).replace(/\D/g, '');
+    let sub, target;
+    if (id.length === 10 && id[0] === '0') { sub = '01'; target = '0066' + id.slice(1); }
+    else if (id.length === 13) { sub = '02'; target = id; }
+    else if (id.length === 15) { sub = '03'; target = id; }
+    else return null;
+    const merchant = tlv('00', 'A000000677010111') + tlv(sub, target);
+    let p = tlv('00', '01') + tlv('01', '12') + tlv('29', merchant) + tlv('58', 'TH') + tlv('53', '764') + tlv('54', amount.toFixed(2)) + '6304';
+    return p + crc16(p);
+  }
+  function renderPayQR() {
+    const v = VEHICLES[selectedVehicle];
+    const box = $('pay-qr');
+    box.innerHTML = '';
+    $('pay-amount').textContent = 'ยอดชำระ ' + v.price + ' บาท';
+    $('pay-ref').textContent = 'รหัสการจอง ' + bookingRef;
+    const payload = ppId ? promptPayPayload(ppId, v.price) : null;
+    if (!payload) {
+      box.innerHTML = '<div class="text-xs text-amber-600 py-6 px-2">ยังไม่ได้ตั้งค่าบัญชีพร้อมเพย์ผู้รับเงิน<br>ตั้งค่าได้ที่ด้านล่างของหน้านี้</div>';
+      return;
+    }
+    new QRCode(box, { text: payload, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
+  }
+  function savePromptPay() {
+    const val = $('pp-input').value.replace(/\D/g, '');
+    if (!promptPayPayload(val, 1)) {
+      $('pp-msg').textContent = 'รูปแบบไม่ถูกต้อง: ใส่เบอร์มือถือ 10 หลัก, เลขบัตรประชาชน 13 หลัก หรือ e-Wallet 15 หลัก';
+      return;
+    }
+    ppId = val;
+    try { localStorage.setItem('shuttle-promptpay', val); } catch (e) {}
+    $('pp-msg').textContent = 'บันทึกแล้ว ลองกดเรียกรถจนถึงหน้ารถมาถึงเพื่อดู QR';
+  }
+  $('pp-input').value = ppId;
+
+  renderPicker();
+
+  // สร้าง QR ตัวอย่าง
+  Object.entries(STATIONS).forEach(([code, name]) => {
+    const box = document.createElement('div');
+    box.className = 'bg-white p-3 rounded-xl border border-slate-200 text-center';
+    const q = document.createElement('div');
+    box.appendChild(q);
+    const label = document.createElement('div');
+    label.className = 'text-xs mt-2 text-slate-600';
+    label.textContent = 'SHUTTLE:' + code + ' · ' + name;
+    box.appendChild(label);
+    $('sample-qrs').appendChild(box);
+    new QRCode(q, { text: 'SHUTTLE:' + code, width: 130, height: 130 });
+  });
+</script>
+</body>
+</html>
